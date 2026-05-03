@@ -52,8 +52,8 @@ Rules:
 2. Create exactly ONE Scene class named \`MathScene\` that extends \`Scene\`
 3. The animation should be clear, educational and visually appealing
 4. Use a black background (default in Manim)
-5. Keep the animation SHORT: target 6-10 seconds total. Prefer concise, punchy animations over long ones
-6. Prefer fewer, well-timed self.play() calls. Avoid unnecessary self.wait() pauses beyond 0.5s
+5. Keep the animation between 5-30 seconds
+6. Use smooth animations with proper timing (self.wait(), self.play())
 7. Add colors, labels, and descriptive text using Text() with Unicode symbols
 8. Output ONLY the Python code with no markdown, no explanations, no backticks
 
@@ -101,16 +101,14 @@ async function renderManim(code: string, animationId: number): Promise<{ videoPa
       "-m", "manim",
       "render",
       "--media_dir", tmpDir,
-      "-ql",                  // 480p low quality
-      "--fps", "10",          // 10fps — 33% fewer frames vs default 15fps
-      "--disable_caching",    // skip cache overhead (each scene is unique)
+      "-ql",           // low quality for speed
       "--format", "mp4",
       scriptPath,
       "MathScene",
     ], { timeout: 120000 });
 
-    // Find the rendered mp4 — fps 10 makes the folder name 480p10
-    const mediaPath = path.join(tmpDir, "videos", "scene", "480p10");
+    // Find the rendered mp4
+    const mediaPath = path.join(tmpDir, "videos", "scene", "480p15");
     const files = await fs.readdir(mediaPath);
     const mp4 = files.find(f => f.endsWith(".mp4"));
     if (!mp4) throw new Error("Manim did not produce an mp4 file");

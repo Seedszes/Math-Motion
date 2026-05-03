@@ -32,7 +32,7 @@ export default function Home() {
             <div className="bg-primary/20 p-2 rounded text-primary">
               <Activity className="w-5 h-5" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight font-mono">MathAnimate</h1>
+            <h1 className="text-xl font-bold tracking-tight font-mono">MathMotion</h1>
           </div>
           {stats && <StatsBar stats={stats} />}
         </div>

@@ -33,6 +33,20 @@ If you need Axes or NumberLine, ALWAYS disable number labels:
 - Axes(x_range=[...], y_range=[...], x_axis_config={"include_numbers": False}, y_axis_config={"include_numbers": False})
 - Then add your own Text() labels manually if needed
 
+CRITICAL CONSTRAINT — VALID COLORS ONLY: Only use color constants that exist in Manim v0.20. The following are the ONLY valid named colors:
+- Basic: WHITE, BLACK, GRAY, GREY, LIGHT_GRAY, LIGHT_GREY, DARK_GRAY, DARK_GREY
+- Red family: RED, RED_A, RED_B, RED_C, RED_D, RED_E, MAROON, MAROON_A/B/C/D/E
+- Green family: GREEN, GREEN_A, GREEN_B, GREEN_C, GREEN_D, GREEN_E
+- Blue family: BLUE, BLUE_A, BLUE_B, BLUE_C, BLUE_D, BLUE_E, DARK_BLUE
+- Yellow family: YELLOW, YELLOW_A, YELLOW_B, YELLOW_C, YELLOW_D, YELLOW_E
+- Orange: ORANGE
+- Purple family: PURPLE, PURPLE_A, PURPLE_B, PURPLE_C, PURPLE_D, PURPLE_E
+- Teal family: TEAL, TEAL_A, TEAL_B, TEAL_C, TEAL_D, TEAL_E
+- Gold family: GOLD, GOLD_A, GOLD_B, GOLD_C, GOLD_D, GOLD_E
+- Pink: PINK, LIGHT_PINK
+- Pure variants: PURE_RED, PURE_GREEN, PURE_BLUE, PURE_CYAN, PURE_YELLOW, PURE_MAGENTA
+DO NOT USE: CYAN (use PURE_CYAN or TEAL instead), MAGENTA (use PURE_MAGENTA), LIME, INDIGO, VIOLET, BROWN (use DARK_BROWN or GRAY_BROWN)
+
 Rules:
 1. Import only from manim: \`from manim import *\`
 2. Create exactly ONE Scene class named \`MathScene\` that extends \`Scene\`

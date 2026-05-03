@@ -42,9 +42,7 @@ export default function Home() {
         {/* Hero Section */}
         <section className="flex flex-col items-center text-center space-y-6 max-w-2xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight">Visualise Math</h2>
-          <p className="text-muted-foreground text-lg max-w-xl">
-            Describe a mathematical concept, theorem, or equation. Our cinematic engine will generate a stunning Manim animation.
-          </p>
+          <p className="text-muted-foreground text-lg max-w-xl">Describe a mathematical concept, theorem, or equation. Our cinematic engine will generate a stunning animation.</p>
           <div className="w-full mt-4">
             <PromptForm />
           </div>

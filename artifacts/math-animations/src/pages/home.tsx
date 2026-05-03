@@ -37,14 +37,11 @@ export default function Home() {
           {stats && <StatsBar stats={stats} />}
         </div>
       </header>
-
       {/* Main Content */}
       <main className="flex-1 container max-w-6xl mx-auto px-4 py-12 flex flex-col gap-12">
         {/* Hero Section */}
         <section className="flex flex-col items-center text-center space-y-6 max-w-2xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight">
-            Math Motion
-          </h2>
+          <h2 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight">Visualise Math</h2>
           <p className="text-muted-foreground text-lg max-w-xl">
             Describe a mathematical concept, theorem, or equation. Our cinematic engine will generate a stunning Manim animation.
           </p>

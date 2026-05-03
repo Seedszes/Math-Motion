@@ -47,24 +47,56 @@ CRITICAL CONSTRAINT — VALID COLORS ONLY: Only use color constants that exist i
 - Pure variants: PURE_RED, PURE_GREEN, PURE_BLUE, PURE_CYAN, PURE_YELLOW, PURE_MAGENTA
 DO NOT USE: CYAN (use PURE_CYAN or TEAL instead), MAGENTA (use PURE_MAGENTA), LIME, INDIGO, VIOLET, BROWN (use DARK_BROWN or GRAY_BROWN)
 
+3D ANIMATIONS — CRITICAL: When the user's prompt involves anything 3-dimensional (3D, three-dimensional, 3D graph, rotating object, sphere, cube, torus, helix, surface, volume, etc.) you MUST use ThreeDScene and proper 3D Manim APIs:
+
+- Extend ThreeDScene instead of Scene: \`class MathScene(ThreeDScene):\`
+- Set camera orientation at the start: \`self.set_camera_orientation(phi=75 * DEGREES, theta=-45 * DEGREES)\`
+- Use 3D primitives: Sphere, Cube, Cylinder, Cone, Torus, Arrow3D, Line3D
+- Use ThreeDAxes (not Axes) for 3D coordinate systems
+- Create surfaces with: \`Surface(lambda u, v: ..., u_range=[...], v_range=[...])\`
+- Animate camera: \`self.begin_ambient_camera_rotation(rate=0.3)\` / \`self.stop_ambient_camera_rotation()\`
+- Move camera: \`self.move_camera(phi=60*DEGREES, theta=30*DEGREES, run_time=2)\`
+- Parametric curves in 3D (USE THIS for helices/spirals, NOT many Dot3D): \`ParametricFunction(lambda t: np.array([cos(t), sin(t), t/4]), t_range=[0, TAU*3], color=YELLOW)\`
+- Do NOT use Text() labels directly in 3D scenes — use \`self.add_fixed_in_frame_mobjects(label)\` for 2D overlays instead
+
+3D PERFORMANCE RULES — MUST FOLLOW to avoid timeouts:
+- Keep Sphere resolution LOW: \`Sphere(radius=1.5, resolution=(16, 16))\` — NEVER higher than (24, 24)
+- NEVER animate many objects in a loop with individual self.play() calls. Use VGroup and animate the whole group at once
+- For helices/spirals: use a single ParametricFunction, NOT a list of Dot3D objects
+- Prefer self.add() over self.play(Create(...)) for static background objects — this avoids rendering overhead
+- Keep 3D scenes to 3–5 self.play() calls maximum — camera rotation time counts as the main animation
+
 Rules:
 1. Import only from manim: \`from manim import *\`
-2. Create exactly ONE Scene class named \`MathScene\` that extends \`Scene\`
+2. Create exactly ONE Scene class named \`MathScene\` that extends \`Scene\` for 2D or \`ThreeDScene\` for 3D
 3. The animation should be clear, educational and visually appealing
 4. Use a black background (default in Manim)
 5. Keep the animation between 5-30 seconds
 6. Use smooth animations with proper timing (self.wait(), self.play())
-7. Add colors, labels, and descriptive text using Text() with Unicode symbols
+7. Add colors, labels, and descriptive text using Text() with Unicode symbols (2D only)
 8. Output ONLY the Python code with no markdown, no explanations, no backticks
 
-Example structure:
+Example 2D structure:
 from manim import *
 
 class MathScene(Scene):
     def construct(self):
         title = Text("My Animation", font_size=48)
         self.play(Write(title))
-        self.wait(1)`;
+        self.wait(1)
+
+Example 3D structure:
+from manim import *
+
+class MathScene(ThreeDScene):
+    def construct(self):
+        self.set_camera_orientation(phi=75 * DEGREES, theta=-45 * DEGREES)
+        axes = ThreeDAxes()
+        sphere = Sphere(radius=1.5).set_color(BLUE)
+        self.play(Create(axes), Create(sphere))
+        self.begin_ambient_camera_rotation(rate=0.3)
+        self.wait(4)
+        self.stop_ambient_camera_rotation()`;
 
 async function generateManimCode(prompt: string): Promise<string> {
   const message = await anthropic.messages.create({
@@ -105,7 +137,7 @@ async function renderManim(code: string, animationId: number): Promise<{ videoPa
       "--format", "mp4",
       scriptPath,
       "MathScene",
-    ], { timeout: 120000 });
+    ], { timeout: 300000 });
 
     // Find the rendered mp4
     const mediaPath = path.join(tmpDir, "videos", "scene", "480p15");

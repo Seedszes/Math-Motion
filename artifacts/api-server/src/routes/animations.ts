@@ -15,6 +15,24 @@ const router = Router();
 
 const MANIM_SYSTEM_PROMPT = `You are a Manim expert. Generate Python code using the Manim Community library (v0.18+) to create a beautiful mathematical animation.
 
+CRITICAL CONSTRAINT — NO LATEX: LaTeX is NOT installed in this environment. You MUST NOT use any of these classes or anything that calls them internally:
+- MathTex, Tex, SingleStringMathTex, TexTemplate (all require latex binary)
+- DecimalNumber (uses MathTex internally for each digit)
+- Integer (uses MathTex internally)
+- Axes with number labels (uses DecimalNumber internally)
+- NumberLine with include_numbers=True (uses DecimalNumber internally)
+
+Instead, use ONLY these for text and math:
+- Text("any string") for all labels, titles, equations, and math notation
+- Use Unicode math symbols directly inside Text(): α β γ δ ε θ λ μ π σ φ ω Σ Π Δ ∫ ∂ ∑ √ ∞ ≈ ≠ ≤ ≥ ² ³ ⁴ ½ ¼
+- Example: Text("α + β + γ = 180°") — NOT MathTex(r"\\alpha + \\beta + \\gamma = 180^\\circ")
+- Example: Text("f(x) = sin(x)") — NOT MathTex(r"f(x) = \\sin(x)")
+- Example: Text("∫₀^π sin(x) dx = 2") — NOT MathTex(r"\\int_0^\\pi")
+
+If you need Axes or NumberLine, ALWAYS disable number labels:
+- Axes(x_range=[...], y_range=[...], x_axis_config={"include_numbers": False}, y_axis_config={"include_numbers": False})
+- Then add your own Text() labels manually if needed
+
 Rules:
 1. Import only from manim: \`from manim import *\`
 2. Create exactly ONE Scene class named \`MathScene\` that extends \`Scene\`
@@ -22,7 +40,7 @@ Rules:
 4. Use a black background (default in Manim)
 5. Keep the animation between 5-30 seconds
 6. Use smooth animations with proper timing (self.wait(), self.play())
-7. Add colors, labels, and descriptive text where helpful
+7. Add colors, labels, and descriptive text using Text() with Unicode symbols
 8. Output ONLY the Python code with no markdown, no explanations, no backticks
 
 Example structure:
@@ -30,8 +48,9 @@ from manim import *
 
 class MathScene(Scene):
     def construct(self):
-        # Your animation code here
-        pass`;
+        title = Text("My Animation", font_size=48)
+        self.play(Write(title))
+        self.wait(1)`;
 
 async function generateManimCode(prompt: string): Promise<string> {
   const message = await anthropic.messages.create({

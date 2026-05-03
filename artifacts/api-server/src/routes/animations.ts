@@ -87,6 +87,7 @@ Rules:
 7. Add colors, labels, and descriptive text using Text() with Unicode symbols
 8. Output ONLY the Python code with no markdown, no explanations, no backticks
 9. SAFE LIST INDEXING: Never use arithmetic index expressions like list[i*3] or list[i+offset] inside loops — they cause IndexError when the arithmetic exceeds the list length. Always use simple sequential iteration: \`for item in my_list\` or \`for i, item in enumerate(my_list)\`. If you need parallel lists, zip them: \`for a, b in zip(list_a, list_b)\`
+10. NUMPY FLOAT ARRAYS: Always use float literals in np.array() for any coordinate or point that will have arithmetic applied to it. Write \`np.array([0.0, 0.0, 0.0])\` NOT \`np.array([0, 0, 0])\`. Integer arrays cause UFuncTypeError when you later do in-place operations like \`+= np.array([-1.5, 0.0, 0.0])\`. Rule: if the array represents a position, always use floats.
 
 Example 2D:
 from manim import *

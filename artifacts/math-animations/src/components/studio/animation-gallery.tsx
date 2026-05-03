@@ -1,13 +1,14 @@
 import { Animation } from "@workspace/api-client-react";
 import AnimationCard from "./animation-card";
-import { Sparkles } from "lucide-react";
+import { Sparkles, SearchX } from "lucide-react";
 
 interface AnimationGalleryProps {
   animations?: Animation[];
   isLoading: boolean;
+  searchQuery?: string;
 }
 
-export default function AnimationGallery({ animations, isLoading }: AnimationGalleryProps) {
+export default function AnimationGallery({ animations, isLoading, searchQuery }: AnimationGalleryProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -19,6 +20,20 @@ export default function AnimationGallery({ animations, isLoading }: AnimationGal
   }
 
   if (!animations || animations.length === 0) {
+    if (searchQuery) {
+      return (
+        <div className="flex flex-col items-center justify-center py-24 text-center border border-dashed border-border/50 rounded-lg bg-card/30">
+          <div className="bg-muted/30 p-4 rounded-full mb-4 text-muted-foreground">
+            <SearchX className="w-8 h-8" />
+          </div>
+          <h3 className="text-xl font-medium mb-2">No results found</h3>
+          <p className="text-muted-foreground max-w-sm font-mono text-sm">
+            No renders match <span className="text-foreground">"{searchQuery}"</span>
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center border border-dashed border-border/50 rounded-lg bg-card/30">
         <div className="bg-primary/10 p-4 rounded-full mb-4 text-primary">

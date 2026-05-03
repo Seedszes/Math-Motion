@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { useGenerateAnimation, getListAnimationsQueryKey, getGetAnimationStatsQueryKey } from "@workspace/api-client-react";
+import {
+  useGenerateAnimation,
+  getListAnimationsQueryKey,
+  getGetAnimationStatsQueryKey,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Terminal, Wand2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,15 +11,19 @@ import { Button } from "@/components/ui/button";
 export default function PromptForm() {
   const [prompt, setPrompt] = useState("");
   const queryClient = useQueryClient();
-  
+
   const generate = useGenerateAnimation({
     mutation: {
       onSuccess: () => {
         setPrompt("");
-        queryClient.invalidateQueries({ queryKey: getListAnimationsQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetAnimationStatsQueryKey() });
-      }
-    }
+        queryClient.invalidateQueries({
+          queryKey: getListAnimationsQueryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: getGetAnimationStatsQueryKey(),
+        });
+      },
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -40,8 +48,8 @@ export default function PromptForm() {
           disabled={generate.isPending}
         />
         <div className="pr-2">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={!prompt.trim() || generate.isPending}
             className="font-mono gap-2"
           >

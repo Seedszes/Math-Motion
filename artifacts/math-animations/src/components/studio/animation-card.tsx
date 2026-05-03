@@ -8,7 +8,7 @@ import {
   getGetAnimationStatsQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Trash2, Loader2, PlayCircle, AlertTriangle, Code2, Clock } from "lucide-react";
+import { Trash2, Loader2, PlayCircle, AlertTriangle, Code2, Clock, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -36,7 +36,6 @@ export default function AnimationCard({ initialAnimation }: AnimationCardProps) 
   const queryClient = useQueryClient();
   const [isCodeOpen, setIsCodeOpen] = useState(false);
 
-  // Poll if pending or generating
   const isPolling = initialAnimation.status === "pending" || initialAnimation.status === "generating";
   
   const { data: animation = initialAnimation } = useGetAnimation(initialAnimation.id, {
@@ -50,7 +49,6 @@ export default function AnimationCard({ initialAnimation }: AnimationCardProps) 
     }
   });
 
-  // Effect to invalidate list when polling finishes
   useEffect(() => {
     if (initialAnimation.status !== animation.status && (animation.status === "completed" || animation.status === "failed")) {
       queryClient.invalidateQueries({ queryKey: getListAnimationsQueryKey() });
@@ -66,6 +64,21 @@ export default function AnimationCard({ initialAnimation }: AnimationCardProps) 
       }
     }
   });
+
+  const handleDownload = async () => {
+    if (!animation.videoUrl) return;
+    const response = await fetch(animation.videoUrl);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const slug = animation.prompt.slice(0, 40).replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+    a.href = url;
+    a.download = `math-motion-${slug}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const renderStatus = () => {
     switch (animation.status) {
@@ -107,10 +120,8 @@ export default function AnimationCard({ initialAnimation }: AnimationCardProps) 
         {animation.status === "completed" && animation.videoUrl ? (
           <video 
             src={animation.videoUrl} 
-            controls 
-            controlsList="nodownload"
+            controls
             className="w-full h-full object-contain"
-            poster=""
           />
         ) : animation.status === "failed" ? (
           <div className="flex flex-col items-center gap-3 text-muted-foreground p-6 text-center">
@@ -135,41 +146,55 @@ export default function AnimationCard({ initialAnimation }: AnimationCardProps) 
       {/* Details Area */}
       <div className="p-5 flex flex-col flex-1 gap-4">
         <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1.5 flex-1">
+          <div className="space-y-1.5 flex-1 min-w-0">
             {renderStatus()}
             <p className="text-foreground leading-snug line-clamp-3" title={animation.prompt}>
               {animation.prompt}
             </p>
             <p className="text-xs text-muted-foreground mt-2">
               {formatDistanceToNow(new Date(animation.createdAt), { addSuffix: true })}
-              {animation.durationSeconds && ` • ${animation.durationSeconds}s duration`}
+              {animation.durationSeconds ? ` • ${animation.durationSeconds}s` : ""}
             </p>
           </div>
           
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                <Trash2 className="w-4 h-4" />
+          <div className="flex items-center gap-1 shrink-0">
+            {animation.status === "completed" && animation.videoUrl && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleDownload}
+                className="text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Download video"
+              >
+                <Download className="w-4 h-4" />
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="border-border bg-card text-foreground">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete animation?</AlertDialogTitle>
-                <AlertDialogDescription className="text-muted-foreground">
-                  This action cannot be undone. This will permanently delete the animation and generated code.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="bg-muted text-muted-foreground hover:bg-muted/80">Cancel</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={() => deleteAnim.mutate({ id: animation.id })}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            )}
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="border-border bg-card text-foreground">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete animation?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground">
+                    This action cannot be undone. This will permanently delete the animation and generated code.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-muted text-muted-foreground hover:bg-muted/80">Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => deleteAnim.mutate({ id: animation.id })}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         {/* Code Section */}

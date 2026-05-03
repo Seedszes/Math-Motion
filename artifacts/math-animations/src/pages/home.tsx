@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { 
   useListAnimations, 
   useGetAnimationStats,
@@ -5,11 +6,22 @@ import {
 import PromptForm from "@/components/studio/prompt-form";
 import StatsBar from "@/components/studio/stats-bar";
 import AnimationGallery from "@/components/studio/animation-gallery";
-import { Activity } from "lucide-react";
+import { Activity, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function Home() {
   const { data: stats } = useGetAnimationStats();
   const { data: animations, isLoading } = useListAnimations();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredAnimations = useMemo(() => {
+    if (!animations) return [];
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return animations;
+    return animations.filter((a) =>
+      a.prompt.toLowerCase().includes(q)
+    );
+  }, [animations, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
@@ -41,15 +53,36 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Gallery Section */}
+        {/* History Section */}
         <section className="space-y-6 pb-24">
-          <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-medium tracking-tight font-mono text-muted-foreground">
-              // Recent Renders
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h3 className="text-2xl font-medium tracking-tight font-mono text-muted-foreground shrink-0">
+              // History
             </h3>
+            <div className="relative w-full sm:max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search renders..."
+                className="pl-9 pr-9 bg-card/50 border-border/60 font-mono text-sm placeholder:text-muted-foreground/60"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
-          
-          <AnimationGallery animations={animations} isLoading={isLoading} />
+
+          <AnimationGallery
+            animations={filteredAnimations}
+            isLoading={isLoading}
+            searchQuery={searchQuery}
+          />
         </section>
       </main>
     </div>

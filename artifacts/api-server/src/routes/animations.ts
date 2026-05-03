@@ -68,6 +68,15 @@ NEVER build raw hex color strings manually (e.g. "#{:02x}...".format(...)) — n
 - Use \`self.add(obj)\` for static objects instead of \`self.play(Create(obj))\` to save render time
 - Keep total self.play() calls to 5 or fewer for 3D scenes
 
+EDUCATIONAL DESIGN PRINCIPLES — apply these to every animation:
+- Narrative arc: Start with the simplest intuition or a concrete example, build up to the key insight, end with the full picture. Never open with abstract formulas cold.
+- One concept at a time: Reveal elements progressively as they become relevant. Don't show everything at once.
+- The "aha moment": Design the whole animation around a single central insight. Every element should serve that moment.
+- Consistent visual language: Use the same colour for the same concept throughout. If x is BLUE at the start, x is BLUE everywhere.
+- Annotate key moments: Add brief Text() labels at turning points — "now differentiate", "notice the symmetry", "these are equal". Viewers can't rewind.
+- Show change, not just state: Animate transformations (morphing, growing, shifting) rather than cutting between static frames. Motion is how Manim teaches.
+- Contrast and comparison: Where possible show before/after, or two cases side by side, so the difference is viscerally clear.
+
 Rules:
 1. Import only from manim: \`from manim import *\`
 2. Create exactly ONE Scene class named \`MathScene\` — extends \`Scene\` for 2D, \`ThreeDScene\` for 3D
@@ -77,6 +86,7 @@ Rules:
 6. Use smooth animations with proper timing (self.wait(), self.play())
 7. Add colors, labels, and descriptive text using Text() with Unicode symbols
 8. Output ONLY the Python code with no markdown, no explanations, no backticks
+9. SAFE LIST INDEXING: Never use arithmetic index expressions like list[i*3] or list[i+offset] inside loops — they cause IndexError when the arithmetic exceeds the list length. Always use simple sequential iteration: \`for item in my_list\` or \`for i, item in enumerate(my_list)\`. If you need parallel lists, zip them: \`for a, b in zip(list_a, list_b)\`
 
 Example 2D:
 from manim import *
@@ -103,14 +113,48 @@ class MathScene(ThreeDScene):
         self.wait(6)
         self.stop_ambient_camera_rotation()`;
 
+async function planAnimation(prompt: string): Promise<string> {
+  const message = await anthropic.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: `I want to create a Manim animation for: "${prompt}"
+
+Before writing any code, think carefully about the best way to visually explain this concept. Answer these questions concisely:
+1. What is the single most important insight or "aha moment" to convey?
+2. What is the best opening scene — a concrete example, an intuition, or a familiar analogy?
+3. What sequence of visual steps builds understanding most naturally?
+4. What should be animated (not just shown statically) to make the concept click?
+5. What consistent colour coding would help (which objects/concepts share a colour)?
+6. Are there any before/after comparisons or contrasts that would be particularly illuminating?
+
+Reply in 6–10 bullet points. No code. Be specific to this concept.`,
+      },
+    ],
+  });
+
+  const block = message.content[0];
+  if (block.type !== "text") throw new Error("No text response from AI");
+  return block.text.trim();
+}
+
 async function generateManimCode(prompt: string): Promise<string> {
+  const plan = await planAnimation(prompt);
+
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 8192,
     messages: [
       {
         role: "user",
-        content: `Create a Manim animation for: ${prompt}`,
+        content: `Create a Manim animation for: "${prompt}"
+
+Here is a pedagogical plan for how to best illustrate this concept — follow it closely:
+${plan}
+
+Now write the Manim Python code that brings this plan to life.`,
       },
     ],
     system: MANIM_SYSTEM_PROMPT,

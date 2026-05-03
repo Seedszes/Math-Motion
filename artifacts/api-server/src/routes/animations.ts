@@ -46,6 +46,9 @@ CRITICAL CONSTRAINT — VALID COLORS ONLY: Only use color constants that exist i
 - Pink: PINK, LIGHT_PINK
 - Pure variants: PURE_RED, PURE_GREEN, PURE_BLUE, PURE_CYAN, PURE_YELLOW, PURE_MAGENTA
 DO NOT USE: CYAN (use PURE_CYAN or TEAL instead), MAGENTA (use PURE_MAGENTA), LIME, INDIGO, VIOLET, BROWN (use DARK_BROWN or GRAY_BROWN)
+NEVER build raw hex color strings manually (e.g. "#{:02x}...".format(...)) — negative or out-of-range values produce invalid strings like "#ff-f-f". Instead use Manim's built-in color interpolation:
+- \`interpolate_color(BLUE, RED, alpha)\` where alpha is clamped 0–1 — this is the correct way to make gradients
+- \`color_gradient([BLUE, WHITE, RED], n)\` for a list of n gradient colors
 
 Rules:
 1. Import only from manim: \`from manim import *\`

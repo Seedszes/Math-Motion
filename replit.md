@@ -2,7 +2,7 @@
 
 ## Overview
 
-MathAnimate — a web app that generates math animations from natural language prompts using Manim (Python) + Claude AI. User types a prompt → Claude writes Manim Python code → server executes it → returns rendered MP4 video.
+MathMotion — a web app that generates math animations from natural language prompts using Manim (Python) + Claude AI. User types a prompt → Claude writes Manim Python code → server executes it → returns rendered MP4 video.
 
 ## Stack
 

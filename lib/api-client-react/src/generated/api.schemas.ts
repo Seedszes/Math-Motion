@@ -8,3 +8,46 @@
 export interface HealthStatus {
   status: string;
 }
+
+export type AnimationStatus =
+  (typeof AnimationStatus)[keyof typeof AnimationStatus];
+
+export const AnimationStatus = {
+  pending: "pending",
+  generating: "generating",
+  completed: "completed",
+  failed: "failed",
+} as const;
+
+export interface Animation {
+  id: number;
+  prompt: string;
+  status: AnimationStatus;
+  videoUrl?: string | null;
+  manimCode?: string | null;
+  errorMessage?: string | null;
+  durationSeconds?: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GenerateAnimationBody {
+  /**
+   * @minLength 3
+   * @maxLength 1000
+   */
+  prompt: string;
+}
+
+export interface AnimationStats {
+  total: number;
+  completed: number;
+  failed: number;
+  pending: number;
+  generating: number;
+}
+
+export interface ErrorResponse {
+  error: string;
+  details?: string | null;
+}

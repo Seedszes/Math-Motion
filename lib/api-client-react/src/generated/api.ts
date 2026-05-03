@@ -5,18 +5,27 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  Animation,
+  AnimationStats,
+  ErrorResponse,
+  GenerateAnimationBody,
+  HealthStatus,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -92,6 +101,413 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all animations
+ */
+export const getListAnimationsUrl = () => {
+  return `/api/animations`;
+};
+
+export const listAnimations = async (
+  options?: RequestInit,
+): Promise<Animation[]> => {
+  return customFetch<Animation[]>(getListAnimationsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAnimationsQueryKey = () => {
+  return [`/api/animations`] as const;
+};
+
+export const getListAnimationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAnimations>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listAnimations>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAnimationsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAnimations>>> = ({
+    signal,
+  }) => listAnimations({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAnimations>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListAnimationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAnimations>>
+>;
+export type ListAnimationsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all animations
+ */
+
+export function useListAnimations<
+  TData = Awaited<ReturnType<typeof listAnimations>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listAnimations>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAnimationsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Generate a math animation from a prompt
+ */
+export const getGenerateAnimationUrl = () => {
+  return `/api/animations`;
+};
+
+export const generateAnimation = async (
+  generateAnimationBody: GenerateAnimationBody,
+  options?: RequestInit,
+): Promise<Animation> => {
+  return customFetch<Animation>(getGenerateAnimationUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(generateAnimationBody),
+  });
+};
+
+export const getGenerateAnimationMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateAnimation>>,
+    TError,
+    { data: BodyType<GenerateAnimationBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof generateAnimation>>,
+  TError,
+  { data: BodyType<GenerateAnimationBody> },
+  TContext
+> => {
+  const mutationKey = ["generateAnimation"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof generateAnimation>>,
+    { data: BodyType<GenerateAnimationBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return generateAnimation(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GenerateAnimationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof generateAnimation>>
+>;
+export type GenerateAnimationMutationBody = BodyType<GenerateAnimationBody>;
+export type GenerateAnimationMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Generate a math animation from a prompt
+ */
+export const useGenerateAnimation = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateAnimation>>,
+    TError,
+    { data: BodyType<GenerateAnimationBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof generateAnimation>>,
+  TError,
+  { data: BodyType<GenerateAnimationBody> },
+  TContext
+> => {
+  return useMutation(getGenerateAnimationMutationOptions(options));
+};
+
+/**
+ * @summary Get a single animation by ID
+ */
+export const getGetAnimationUrl = (id: number) => {
+  return `/api/animations/${id}`;
+};
+
+export const getAnimation = async (
+  id: number,
+  options?: RequestInit,
+): Promise<Animation> => {
+  return customFetch<Animation>(getGetAnimationUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAnimationQueryKey = (id: number) => {
+  return [`/api/animations/${id}`] as const;
+};
+
+export const getGetAnimationQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAnimation>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAnimation>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAnimationQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnimation>>> = ({
+    signal,
+  }) => getAnimation(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAnimation>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAnimationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAnimation>>
+>;
+export type GetAnimationQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get a single animation by ID
+ */
+
+export function useGetAnimation<
+  TData = Awaited<ReturnType<typeof getAnimation>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAnimation>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAnimationQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Delete an animation
+ */
+export const getDeleteAnimationUrl = (id: number) => {
+  return `/api/animations/${id}`;
+};
+
+export const deleteAnimation = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteAnimationUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteAnimationMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAnimation>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAnimation>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteAnimation"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAnimation>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteAnimation(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAnimationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAnimation>>
+>;
+
+export type DeleteAnimationMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Delete an animation
+ */
+export const useDeleteAnimation = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAnimation>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAnimation>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteAnimationMutationOptions(options));
+};
+
+/**
+ * @summary Get animation generation statistics
+ */
+export const getGetAnimationStatsUrl = () => {
+  return `/api/animations/stats`;
+};
+
+export const getAnimationStats = async (
+  options?: RequestInit,
+): Promise<AnimationStats> => {
+  return customFetch<AnimationStats>(getGetAnimationStatsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAnimationStatsQueryKey = () => {
+  return [`/api/animations/stats`] as const;
+};
+
+export const getGetAnimationStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAnimationStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAnimationStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAnimationStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getAnimationStats>>
+  > = ({ signal }) => getAnimationStats({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAnimationStats>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAnimationStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAnimationStats>>
+>;
+export type GetAnimationStatsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get animation generation statistics
+ */
+
+export function useGetAnimationStats<
+  TData = Awaited<ReturnType<typeof getAnimationStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAnimationStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAnimationStatsQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

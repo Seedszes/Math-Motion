@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: animations
+    description: Math animation generation
 paths:
   /healthz:
     get:
@@ -24,6 +26,104 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /animations:
+    get:
+      operationId: listAnimations
+      tags: [animations]
+      summary: List all animations
+      responses:
+        "200":
+          description: List of animations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Animation"
+    post:
+      operationId: generateAnimation
+      tags: [animations]
+      summary: Generate a math animation from a prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateAnimationBody"
+      responses:
+        "201":
+          description: Animation generation started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Animation"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /animations/{id}:
+    get:
+      operationId: getAnimation
+      tags: [animations]
+      summary: Get a single animation by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Animation details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Animation"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteAnimation
+      tags: [animations]
+      summary: Delete an animation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /animations/stats:
+    get:
+      operationId: getAnimationStats
+      tags: [animations]
+      summary: Get animation generation statistics
+      responses:
+        "200":
+          description: Stats summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnimationStats"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +133,75 @@ components:
           type: string
       required:
         - status
-
+    Animation:
+      type: object
+      properties:
+        id:
+          type: integer
+        prompt:
+          type: string
+        status:
+          type: string
+          enum: [pending, generating, completed, failed]
+        videoUrl:
+          type: string
+          nullable: true
+        manimCode:
+          type: string
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+        durationSeconds:
+          type: number
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - prompt
+        - status
+        - createdAt
+        - updatedAt
+    GenerateAnimationBody:
+      type: object
+      properties:
+        prompt:
+          type: string
+          minLength: 3
+          maxLength: 1000
+      required:
+        - prompt
+    AnimationStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        completed:
+          type: integer
+        failed:
+          type: integer
+        pending:
+          type: integer
+        generating:
+          type: integer
+      required:
+        - total
+        - completed
+        - failed
+        - pending
+        - generating
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+          nullable: true
+      required:
+        - error

@@ -50,9 +50,27 @@ NEVER build raw hex color strings manually (e.g. "#{:02x}...".format(...)) — n
 - \`interpolate_color(BLUE, RED, alpha)\` where alpha is clamped 0–1 — this is the correct way to make gradients
 - \`color_gradient([BLUE, WHITE, RED], n)\` for a list of n gradient colors
 
+3D ANIMATIONS — When the user's prompt mentions anything 3-dimensional (3D, three-dimensional, rotating object, sphere, torus, surface, volume, 3D graph, etc.) you MUST use ThreeDScene and 3D APIs:
+- \`class MathScene(ThreeDScene):\` — NOT Scene
+- Set camera at start: \`self.set_camera_orientation(phi=70 * DEGREES, theta=-60 * DEGREES)\`
+- 3D objects: Sphere, Cube, Cylinder, Cone, Torus, Arrow3D, Line3D
+- 3D axes: ThreeDAxes (NOT Axes)
+- 3D surfaces: \`Surface(lambda u, v: np.array([x, y, z]), u_range=[...], v_range=[...], resolution=(20, 20))\`
+- 3D parametric curves (helices, spirals): \`ParametricFunction(lambda t: np.array([...]), t_range=[a, b])\` — NOT lists of Dot3D
+- Camera rotation: \`self.begin_ambient_camera_rotation(rate=0.25)\` / \`self.stop_ambient_camera_rotation()\`
+- Camera move: \`self.move_camera(phi=60*DEGREES, theta=30*DEGREES, run_time=2)\`
+- 2D text overlays in 3D scenes: \`self.add_fixed_in_frame_mobjects(label)\` after creating the label
+
+3D PERFORMANCE — MUST follow to avoid timeouts:
+- Sphere resolution max: \`Sphere(resolution=(16, 16))\` — never higher than (20, 20)
+- Surface resolution max: \`resolution=(24, 24)\`
+- NEVER animate many objects individually in a loop — group with VGroup and animate once
+- Use \`self.add(obj)\` for static objects instead of \`self.play(Create(obj))\` to save render time
+- Keep total self.play() calls to 5 or fewer for 3D scenes
+
 Rules:
 1. Import only from manim: \`from manim import *\`
-2. Create exactly ONE Scene class named \`MathScene\` that extends \`Scene\`
+2. Create exactly ONE Scene class named \`MathScene\` — extends \`Scene\` for 2D, \`ThreeDScene\` for 3D
 3. The animation should be clear, educational and visually appealing
 4. Use a black background (default in Manim)
 5. Keep the animation between 5-30 seconds
@@ -60,14 +78,30 @@ Rules:
 7. Add colors, labels, and descriptive text using Text() with Unicode symbols
 8. Output ONLY the Python code with no markdown, no explanations, no backticks
 
-Example structure:
+Example 2D:
 from manim import *
 
 class MathScene(Scene):
     def construct(self):
         title = Text("My Animation", font_size=48)
         self.play(Write(title))
-        self.wait(1)`;
+        self.wait(1)
+
+Example 3D:
+from manim import *
+
+class MathScene(ThreeDScene):
+    def construct(self):
+        self.set_camera_orientation(phi=70 * DEGREES, theta=-60 * DEGREES)
+        axes = ThreeDAxes()
+        surf = Surface(lambda u, v: axes.c2p(u, v, np.sin(u)*np.cos(v)),
+                       u_range=[-3, 3], v_range=[-3, 3], resolution=(20, 20))
+        surf.set_color_by_gradient(BLUE, GREEN, YELLOW)
+        self.add(axes)
+        self.play(Create(surf), run_time=3)
+        self.begin_ambient_camera_rotation(rate=0.25)
+        self.wait(6)
+        self.stop_ambient_camera_rotation()`;
 
 async function generateManimCode(prompt: string): Promise<string> {
   const message = await anthropic.messages.create({
@@ -108,7 +142,7 @@ async function renderManim(code: string, animationId: number): Promise<{ videoPa
       "--format", "mp4",
       scriptPath,
       "MathScene",
-    ], { timeout: 120000 });
+    ], { timeout: 300000 });
 
     // Find the rendered mp4
     const mediaPath = path.join(tmpDir, "videos", "scene", "480p15");
